@@ -25,7 +25,6 @@ model.fit(X_train, y_train)
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key="sk-proj-K9d5Gl4z0ShDFUpzoxXAT3BlbkFJWaymTibbyTIge51vjuHB", temperature=0)
-
 # %%
 from langchain.agents import tool
 
@@ -34,9 +33,9 @@ def call_model(weight):
     """
     Returns prediction of a model
     """
+    weight = np.array([[weight]])
     height = model.predict(weight)
-
-    return height
+    return height[0]
 
 tools = [call_model]
 # %%
@@ -46,7 +45,11 @@ prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are an assistant that is tasked to predict a person's height in inches based on the given weight in pounds"
+            """
+            You are an assistant that is tasked to predict a person's height 
+            in inches based on the given weight in pounds. In the given sentence 
+            there will only be a single number that you will need to extract, which is the weight
+            """
         ),
         ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent")
@@ -54,6 +57,14 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 llm_with_tools = llm.bind_tools(tools)
+
+#%%
+def preprocess_input(input_data):
+    try:
+        weight = float(input_data)
+        return np.array([[weight]])
+    except ValueError:
+        raise ValueError("Input data must be a number representing the weight.")
 
 #%%
 from langchain.agents.format_scratchpad.openai_tools import (
@@ -80,6 +91,4 @@ from langchain.agents import AgentExecutor
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-list(agent_executor.stream({"input": "what is the person height if he has a weight of 45"}))
-
-
+result = list(agent_executor.stream({"input": "what is the person height if he has a weight of 40 "}))
