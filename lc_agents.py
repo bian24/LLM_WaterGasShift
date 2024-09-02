@@ -1,10 +1,12 @@
 #%%
+from dotenv import load_dotenv
 import numpy as np
 import pandas as pd
+import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, r2_score
-
+load_dotenv()
+#%%
 # Generate some dummy data
 np.random.seed(42)
 weights = np.random.uniform(50, 100, 100)  # 100 random weights between 50 and 100 kg
@@ -24,8 +26,8 @@ model.fit(X_train, y_train)
 #%%
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", openai_api_key="sk-proj-K9d5Gl4z0ShDFUpzoxXAT3BlbkFJWaymTibbyTIge51vjuHB", temperature=0)
-# %%
+llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)# %%
+
 from langchain.agents import tool
 
 @tool
@@ -78,8 +80,6 @@ agent = (
             x["intermediate_steps"]
         ),
         "input": lambda x: x["input"]
-        
-        
 
     }
     | prompt
@@ -92,3 +92,43 @@ from langchain.agents import AgentExecutor
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 result = list(agent_executor.stream({"input": "what is the person height if he has a weight of 40 "}))
+#%%
+rf = pickle.load(open("RF_CO.pkl", "rb"))
+# %%
+print(rf.get_booster().feature_names)
+# %%
+# RAG
+import bs4
+from langchain import hub
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_chroma import Chroma
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+# Load, chunk and index the contents of the blog.
+loader = PyPDFLoader("WGS-PDFs-main")
+docs = loader.load_and_split()
+
+
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+splits = text_splitter.split_documents(docs)
+vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
+
+# Retrieve and generate using the relevant snippets of the blog.
+retriever = vectorstore.as_retriever()
+prompt = hub.pull("rlm/rag-prompt", api_key="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")
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
+
+
+rag_chain = (
+    {"context": retriever | format_docs, "question": RunnablePassthrough()}
+    | prompt
+    | llm
+    | StrOutputParser()
+)
+# %%
+rag_chain.invoke("What is Task Decomposition?")
+

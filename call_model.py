@@ -11,7 +11,7 @@ messages = [
     {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
     {"role": "user", "content": """
     Extract the features related to metals, promoters, oxides, and process conditions from the following sentence:
-    "I want to design a catalyst using 3 grams of gold with a chlorination impregnation promoter of 5g, calcined at 450 degrees Celsius for 4 hours, and the reaction temperature set to 350 degrees Celsius."
+    "I want to design a catalyst using 3 grams of jold with a chlorination impregnation promoter of 5g, calcined at 450 degrees Celsius for 4 hours, and the reaction temperature set to 350 degrees Celsius."
     Classify them as follows:
     - Metals: platinum, gold, ruthenium, rhodium, iridium, copper, palladium, cerium, cobalt, magnesium, iron, manganese, zirconium, potassium, nickel, calcium, cesium, vanadium, rubidium, yttrium, sodium, lanthanum, gadolinium, ytterbium, zinc, rhenium, strontium.
     - Promoters: incipient wetness impregnation, wet impregnation, chlorination impregnation, sol-gel process, supercritical drying, co-precipitation, hydrothermal deposition, ultrasound-assisted impregnation, surface characterization techniques, flame spray pyrolysis, mechanochemical, deposition precipitation.
@@ -65,6 +65,7 @@ all_components = [
     'water volume percentage', 'carbon dioxide volume percentage', 'methane volume percentage',
     'time on stream', 'weight hourly space velocity'
 ]
+# add assertion confirmation for error handling
 
 # Define the input dictionary
 input_dict = {
@@ -96,3 +97,4 @@ combined_array = ', '.join(map(str, combined_array))
 print('Combined Array:', combined_array)
 
 # %%
+## add something that can verify the output array, assertion comparing input prompt with array output
