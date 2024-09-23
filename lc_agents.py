@@ -1,11 +1,14 @@
 #%%
 from dotenv import load_dotenv
 import numpy as np
+import openai
+import os
 import pandas as pd
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
-load_dotenv()
+
+openai.api_key = 'sk-proj-K9d5Gl4z0ShDFUpzoxXAT3BlbkFJWaymTibbyTIge51vjuHB'
 #%%
 # Generate some dummy data
 np.random.seed(42)
