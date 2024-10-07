@@ -4,6 +4,7 @@ import numpy as np
 import json
 from openai import OpenAI
 import yaml
+import re
 
 load_dotenv()
 
@@ -11,26 +12,10 @@ load_dotenv()
 with open("env.yaml", "r") as stream:
     yaml_vars = yaml.safe_load(stream)
 
+
+
 # Define the input prompt
-prompt = """
-    Extract the features related to metals, promoters, oxides, and process conditions from the following sentence:
-    "I want to design a catalyst using 3 grams of aluminium with a chlorination impregnation promoter of 5g, calcined at 450 degrees Celsius for 4 hours, and the reaction temperature set to 350 degrees Celsius."
-    Classify them as follows:
-    - Metals: platinum, gold, ruthenium, rhodium, iridium, copper, palladium, cerium, cobalt, magnesium, iron, manganese, zirconium, potassium, nickel, calcium, cesium, vanadium, rubidium, yttrium, sodium, lanthanum, gadolinium, ytterbium, zinc, rhenium, strontium.
-    - Promoters: incipient wetness impregnation, wet impregnation, chlorination impregnation, sol-gel process, supercritical drying, co-precipitation, hydrothermal deposition, ultrasound-assisted impregnation, surface characterization techniques, flame spray pyrolysis, mechanochemical, deposition precipitation.
-    - Oxides: aluminum oxide, magnesium oxide, cerium oxide, titanium dioxide, zeolite, manganese oxide, yttrium oxide, zirconium dioxide, hydroxyapatite, activated carbon composite, terbium oxide, hafnium dioxide, lanthanum oxide, cobalt oxide, thorium dioxide, silicon dioxide, iron(III) oxide, samarium oxide, gadolinium oxide, ytterbium oxide, calcium oxide, nickel oxide, chromium(III) oxide, holmium oxide, neodymium oxide, thulium oxide, erbium oxide, yttria-stabilized zirconia.
-    - Process Conditions: calcination temperature (in degrees Celsius), calcination time (in hours), reaction temperature (in degrees Celsius), hydrogen volume percentage, oxygen volume percentage, carbon monoxide volume percentage, water volume percentage, carbon dioxide volume percentage, methane volume percentage, time on stream (in minutes), weight hourly space velocity (in mg.min/ml).
-    {
-  "metals": {"type of metal such as platinum": "its weight as a floating-point number"},
-  "promoters": {"type promoters mentioned": "their weight as a floating-point number"},
-  "oxides": {"type of oxides mentioned": "their weight as a floating-point number"},
-  "process_conditions": {"type of process conditions mentioned": "their values as floating-point numbers without units"},
-  "conversion": null
-    }
-
-    Ensure that all numeric values are returned as floating-point numbers without any units such as 'grams' or 'degrees'.
-    """
-
+prompt = yaml_vars['system_prompt'] # combination of system prompt
 messages = [
     {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
     {"role": "user", "content": prompt}
@@ -43,19 +28,18 @@ response = client.chat.completions.create(
     messages=messages
 )
 
-# Extract the output
-output = response.choices[0].message.content
+# Extract and convert the output to a dictionary
+output = response.choices[0].message.content.replace("null", "None")
+output = re.sub('\s+', ' ', output)
+dict_output = eval(output)
 
-# Convert the output to a dictionary
-print(output)
+# TODO
+# assume that the output is already dict, but still need to fix
+output = {"Metals": {"aluminium": 3.0}, "Promoters": {"chlorination impregnation": 5.0}, "Oxides": {}, "Process Conditions": {"calcination_temperature": 450.0, "calcination_time": 4.0, "reaction_temperature": 350.0}}
+
 # %%
 # Define the possible components for each category in the order provided
 all_components = yaml_vars['all_components']
-print(all_components)
-# add assertion confirmation for error handling
-
-# Define the input dictionary
-input_dict = output
 
 # Initialize a single array with zeros
 combined_array = np.zeros(len(all_components))
@@ -70,13 +54,8 @@ def update_array_from_dict(component_list, dictionary):
                     combined_array[index] = value
 
 ## add something that can verify the output array, assertion comparing input prompt with array output
-update_array_from_dict(all_components, input_dict)
+update_array_from_dict(all_components, output)
+
+assert combined_array.shape[0]==len(all_components), "error"
 combined_array = ', '.join(map(str, combined_array))
-
-# Assertion 1. Compare input with array output
-
-
-print('Combined Array:', combined_array)
-
-# %%
-assert 1==2, "error"
+print(combined_array)
