@@ -1,10 +1,8 @@
 #%%
 from dotenv import load_dotenv
 import numpy as np
-import json
 from openai import OpenAI
 import yaml
-import re
 
 load_dotenv()
 
@@ -12,50 +10,53 @@ load_dotenv()
 with open("env.yaml", "r") as stream:
     yaml_vars = yaml.safe_load(stream)
 
-
-
 # Define the input prompt
-prompt = yaml_vars['system_prompt'] # combination of system prompt
+prompt = yaml_vars['system_prompt']
 messages = [
     {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
     {"role": "user", "content": prompt}
 ]
 
-# Make the API call
+# Define API
 client = OpenAI()
 response = client.chat.completions.create(
-    model='gpt-4o-mini',
+    model=yaml_vars['model_name'],
     messages=messages
 )
 
-# Extract and convert the output to a dictionary
-output = response.choices[0].message.content.replace("null", "None")
-output = re.sub('\s+', ' ', output)
-dict_output = eval(output)
+def call_model(response):
+    # Define possible components in the order provided
+    all_components = yaml_vars['all_components']
+    # Define a single array with zeros
+    combined_array = np.zeros(len(all_components))
 
-# TODO
-# assume that the output is already dict, but still need to fix
-output = {"Metals": {"aluminium": 3.0}, "Promoters": {"chlorination impregnation": 5.0}, "Oxides": {}, "Process Conditions": {"calcination_temperature": 450.0, "calcination_time": 4.0, "reaction_temperature": 350.0}}
+    max_retries = 100  # Define a limit for retries
+    retry_count = 0
+    output = None
 
-# %%
-# Define the possible components for each category in the order provided
-all_components = yaml_vars['all_components']
+    # TODO Error Handling
+    while retry_count < max_retries:
+        try:
+            content = response.choices[0].message.content.replace("null", "None")
+            output = eval(eval(content))
+            retry_count = 0 # reset retry_count
+            break  
+        except (TypeError, SyntaxError, NameError) as e:
+            retry_count += 1
+            if retry_count == max_retries:
+                return "Max retries reached. Could not evaluate content."
+    
 
-# Initialize a single array with zeros
-combined_array = np.zeros(len(all_components))
-
-# Update the array based on the input dictionary
-def update_array_from_dict(component_list, dictionary):
-    for category, items in dictionary.items():
-        if isinstance(items, dict):  # Ensure items is a dictionary
+    for category, items in output.items():
+        if isinstance(items, dict):  
             for item, value in items.items():
-                if item in component_list:
-                    index = component_list.index(item)
+                if item in all_components:
+                    index = all_components.index(item)
                     combined_array[index] = value
 
-## add something that can verify the output array, assertion comparing input prompt with array output
-update_array_from_dict(all_components, output)
-
-assert combined_array.shape[0]==len(all_components), "error"
-combined_array = ', '.join(map(str, combined_array))
-print(combined_array)
+    assert combined_array.shape[0]==len(all_components), "error"
+    combined_array = ', '.join(map(str, combined_array))
+    
+    return combined_array
+# %%
+print(call_model(response))
