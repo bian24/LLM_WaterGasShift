@@ -58,5 +58,3 @@ def call_model(response):
     combined_array = ', '.join(map(str, combined_array))
     
     return combined_array
-# %%
-print(call_model(response))

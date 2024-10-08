@@ -1,59 +1,47 @@
 #%%
 from dotenv import load_dotenv
 import numpy as np
-import openai
-import os
 import pandas as pd
 import pickle
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
 
-openai.api_key = 'sk-proj-K9d5Gl4z0ShDFUpzoxXAT3BlbkFJWaymTibbyTIge51vjuHB'
+
 #%%
-# Generate some dummy data
-np.random.seed(42)
-weights = np.random.uniform(50, 100, 100)  # 100 random weights between 50 and 100 kg
-heights = weights * 0.5 + np.random.normal(0, 5, 100)  # height roughly correlated with weight
 
-# Create a DataFrame
-data = pd.DataFrame({'Weight': weights, 'Height': heights})
-
-# Split the data into training and testing sets
-X = data[['Weight']]
-y = data['Height']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Create and train the Random Forest Regressor
-model = RandomForestRegressor(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
-#%%
+# LLM Declaration
 from langchain_openai import ChatOpenAI
-
 llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)# %%
 
+# Tool
 from langchain.agents import tool
-
 @tool
-def call_model(weight):
+def call_model(model, input):
     """
     Returns prediction of a model
     """
-    weight = np.array([[weight]])
-    height = model.predict(weight)
-    return height[0]
+    input = np.array([[input]])
+    output = model.predict(input)
+    return output[0]
 
 tools = [call_model]
-# %%
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+# Model
+model = pickle.load(open("RF_CO.pkl", "rb"))
+print(model.feature_names)
+
+# %%
+
+# Prompt
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
             """
-            You are an assistant that is tasked to predict a person's height 
-            in inches based on the given weight in pounds. In the given sentence 
-            there will only be a single number that you will need to extract, which is the weight
+            You are an assistant that is tasked to predict the CO conversion 
+            in terms of percentage using the given model and inputs
+            the input will be in the form of a numpy array, and the output is only a single floating point
+            number which is the CO conversion percentage
             """
         ),
         ("user", "{input}"),
@@ -93,45 +81,9 @@ agent = (
 from langchain.agents import AgentExecutor
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-
-result = list(agent_executor.stream({"input": "what is the person height if he has a weight of 40 "}))
+question = "predict co conversion"
+question_input = agent_executor.stream({"input": question})
+result = list(question_input)
 #%%
-rf = pickle.load(open("RF_CO.pkl", "rb"))
 # %%
-print(rf.get_booster().feature_names)
-# %%
-# RAG
-import bs4
-from langchain import hub
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_chroma import Chroma
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-# Load, chunk and index the contents of the blog.
-loader = PyPDFLoader("WGS-PDFs-main")
-docs = loader.load_and_split()
-
-
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-splits = text_splitter.split_documents(docs)
-vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings())
-
-# Retrieve and generate using the relevant snippets of the blog.
-retriever = vectorstore.as_retriever()
-prompt = hub.pull("rlm/rag-prompt", api_key="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")
-
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
-
-
-rag_chain = (
-    {"context": retriever | format_docs, "question": RunnablePassthrough()}
-    | prompt
-    | llm
-    | StrOutputParser()
-)
-# %%
-rag_chain.invoke("What is Task Decomposition?")
-
+#
