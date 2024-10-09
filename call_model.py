@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import numpy as np
 from openai import OpenAI
 import yaml
+import os
 
 load_dotenv()
 
@@ -10,31 +11,34 @@ load_dotenv()
 with open("env.yaml", "r") as stream:
     yaml_vars = yaml.safe_load(stream)
 
-# Define the input prompt
-prompt = yaml_vars['system_prompt']
-messages = [
-    {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
-    {"role": "user", "content": prompt}
-]
 
-# Define API
-client = OpenAI()
-response = client.chat.completions.create(
-    model=yaml_vars['model_name'],
-    messages=messages
-)
 
-def call_model(response):
+def call_model(question):
+    # Define the input prompt
+    prompt = yaml_vars['system_prompt'].format(question = question)
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
+        {"role": "user", "content": prompt}
+    ]
+
+    # Define API
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model=yaml_vars['model_name'],
+        messages=messages
+    )
+    
     # Define possible components in the order provided
     all_components = yaml_vars['all_components']
     # Define a single array with zeros
     combined_array = np.zeros(len(all_components))
 
-    max_retries = 100  # Define a limit for retries
+    # Define a limit for retries
+    max_retries = 100  
     retry_count = 0
     output = None
 
-    # TODO Error Handling
+    # Error Handling
     while retry_count < max_retries:
         try:
             content = response.choices[0].message.content.replace("null", "None")
@@ -55,6 +59,5 @@ def call_model(response):
                     combined_array[index] = value
 
     assert combined_array.shape[0]==len(all_components), "error"
-    combined_array = ', '.join(map(str, combined_array))
     
     return combined_array
