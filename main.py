@@ -26,7 +26,7 @@ def answer_question(question: str) -> int:
 
     prediction = model.predict([elements_array])
 
-    return prediction
+    return prediction[0]
 
 question = "I want to design a catalyst using 5 grams of gold with a CI of 5g, at temperature of 450 with TOS of 4"
 print(answer_question(question))
