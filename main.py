@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-import numpy
+import numpy as np
 import os
 import pickle
 
@@ -19,7 +19,8 @@ def answer_question(question: str) -> int:
     """
     # numpy array of dimensions of the model
     elements_array = call_model(question)
-    assert type(elements_array) == numpy.ndarray, "Not NumPy array"
+    print(elements_array)
+    assert type(elements_array) == np.ndarray, "Not NumPy array"
 
     # Model Call
     model = pickle.load(open("RF_CO.pkl", "rb"))
@@ -30,4 +31,3 @@ def answer_question(question: str) -> int:
 
 question = "I want to design a catalyst using 5 grams of gold with a CI of 5g, at temperature of 450 with TOS of 4"
 print(answer_question(question))
-
