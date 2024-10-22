@@ -29,5 +29,6 @@ def answer_question(question: str) -> int:
 
     return prediction[0]
 
-question = "I want to design a catalyst using 5 grams of gold with a CI of 5g, at temperature of 450 with TOS of 4"
+# change this to try out different question, if it says assertion error try until it works
+question = "i want to design a catalyst using 0.87 grams of gold calcination temperature of 100 degrees celcius"
 print(answer_question(question))
