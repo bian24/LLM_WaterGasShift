@@ -1,0 +1,212 @@
+import sklearn_crfsuite
+from sklearn_crfsuite import metrics
+
+# Feature extraction for a token
+def extract_features(sentence, i):
+    token = sentence[i][0]
+    features = {
+        'word': token,
+        'is_upper': token.isupper(),
+        'is_title': token.istitle(),
+        'is_digit': token.isdigit(),
+    }
+    if i > 0:
+        features['prev_word'] = sentence[i-1][0]
+    else:
+        features['BOS'] = True  # Beginning of Sentence
+    
+    if i < len(sentence) - 1:
+        features['next_word'] = sentence[i+1][0]
+    else:
+        features['EOS'] = True  # End of Sentence
+    return features
+
+# Transform dataset into features and labels
+def prepare_data(data):
+    X, y = [], []
+    for sentence in data:
+        X.append([extract_features(sentence, i) for i in range(len(sentence))])
+        y.append([label for _, label in sentence])
+    return X, y
+
+# Entity lists
+metals = ['Platinum', 'Gold', 'Ruthenium', 'Rhodium', 'Iridium', 'Copper', 'Palladium', 'Nickel', 'Osmium', 'Rhenium']
+supports = [
+    'Aluminum Oxide', 'Magnesium Oxide', 'Cerium Oxide', 'Titanium Dioxide', 
+    'Titanium Dioxide P25', 'Manganese Oxide', 'Yttrium Oxide', 'Zirconium Oxide', 
+    'Hydroxyapatite', 'Amorphous Calcium Carbonate', 'Hafnium Oxide', 
+    'Lanthanum Oxide', 'Cobalt Oxide', 'Silicon Dioxide', 'Zinc Oxide', 
+    'Magnetite (Iron(II,III) Oxide)', 'Hematite (Iron(III) Oxide)', 
+    'Calcium Oxide', 'Ruthenium Dioxide', 'Gallium Oxide', 'Uranium Trioxide', 
+    'Triuranium Octoxide', 'Chromium(III) Oxide', 'Manganese Dioxide', 
+    'Graphene Oxide', 'Alpha Molybdenum Carbide', 'Molybdenum Nitride'
+]
+promoters = [
+    'Lithium', 'Cerium', 'Cobalt', 'Iron', 'Manganese', 'Zirconium', 'Potassium', 
+    'Nickel', 'Cesium', 'Rubidium', 'Yttrium', 'Sodium', 'Lanthanum', 'Gadolinium', 
+    'Praseodymium', 'Zinc'
+]
+methods = [
+    'Impregnation with Inverse Water', 'Wet Impregnation', 'Chemical Impregnation', 
+    'Solid Impregnation', 'Sol-Gel Process', 'Co-precipitation', 'High-Density Plasma', 
+    'Ultrasonic Gelation Coating', 'Solid State Combustion', 'Flame Spray Pyrolysis', 
+    'Mechanochemical Synthesis', 'Dip Coating', 'Ultraviolet Curing', 'Thermal Decomposition', 
+    'Self-Combustion Method', 'Direct Ammonia Synthesis', 'Hydrothermal Synthesis', 
+    'Thermal Co-precipitation', 'Direct Current Plasma', 'Low-Pressure Reduction Deposition', 
+    'Chemical Vapor Deposition', 'Rapid Solidification of Thermal Deposition', 
+    'Milling Process', 'Hydrothermal Method', 'Nanocasting', 'Evaporation-Induced Self-Assembly', 
+    'Chemical Adsorption', 'Chemical Deposition', 'Ultrasonic Spray Method', 'Plasma Treatment', 
+    'Acoustic Emission Heating', 'Acid Precipitation'
+]
+catalysts = [
+    'Krypton', 'Carbon Monoxide', 'Water', 'Carbon Dioxide', 'Hydrogen', 
+    'Oxygen', 'Methane', 'Nitrogen', 'Helium', 'Argon'
+]
+parameters = ['temperature', 'TOS', 'W/F']
+
+# Units
+mass_unit = ['g']
+temperature_unit = ['°C']
+volume_unit = ['mL']
+concentration_unit = ['vol.%']
+time_unit = ['h']
+flow_rate_unit = ['mg.min/mL']
+
+# Entity-to-column mapping
+entity_to_column = {}
+column_index = 0
+
+# Add metals, supports, promoters, methods, catalysts, and parameters to the column mapping
+for metal in metals:
+    entity_to_column[metal.lower()] = column_index
+    column_index += 1
+for support in supports:
+    entity_to_column[support.lower()] = column_index
+    column_index += 1
+for promoter in promoters:
+    entity_to_column[promoter.lower()] = column_index
+    column_index += 1
+for method in methods:
+    entity_to_column[method.lower()] = column_index
+    column_index += 1
+for catalyst in catalysts:
+    entity_to_column[catalyst.lower()] = column_index
+    column_index += 1
+for parameter in parameters:
+    entity_to_column[parameter.lower()] = column_index
+    column_index += 1
+
+# Example dataset (list of sentences with (token, label) pairs)
+dataset = [
+    [('98', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('gold', 'B-METAL'), ('using', 'O'), ('wet-impregnation', 'B-METHOD'), ('process', 'O')],
+    [('65', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('platinum', 'B-METAL'), ('on', 'O'), ('titanium', 'B-SUPPORT')],
+    [('45', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('ruthenium', 'B-METAL'), ('on', 'O'), ('silicon dioxide', 'B-SUPPORT')],
+    [('32', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('rhodium', 'B-METAL'), ('on', 'O'), ('aluminum oxide', 'B-SUPPORT')],
+    [('150', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('copper', 'B-METAL'), ('on', 'O'), ('magnesium oxide', 'B-SUPPORT')],
+    [('85', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('nickel', 'B-METAL'), ('on', 'O'), ('cerium oxide', 'B-SUPPORT')],
+    [('73', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('iridium', 'B-METAL'), ('on', 'O'), ('yttrium oxide', 'B-SUPPORT')],
+    [('120', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('palladium', 'B-METAL'), ('on', 'O'), ('magnetite', 'B-SUPPORT')],
+    [('50', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('platinum', 'B-METAL'), ('on', 'O'), ('titanium dioxide', 'B-SUPPORT')],
+    [('98', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('ruthenium', 'B-METAL'), ('on', 'O'), ('graphene oxide', 'B-SUPPORT')],
+    [('75', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('cobalt', 'B-METAL'), ('on', 'O'), ('calcium oxide', 'B-SUPPORT')],
+    [('58', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('iridium', 'B-METAL'), ('on', 'O'), ('hydroxyapatite', 'B-SUPPORT')],
+    [('82', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('nickel', 'B-METAL'), ('on', 'O'), ('zinc oxide', 'B-SUPPORT')],
+    [('130', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('osmium', 'B-METAL'), ('on', 'O'), ('zinc oxide', 'B-SUPPORT')],
+    [('110', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('rhodium', 'B-METAL'), ('on', 'O'), ('titanium dioxide', 'B-SUPPORT')],
+    [('60', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('palladium', 'B-METAL'), ('on', 'O'), ('silicon dioxide', 'B-SUPPORT')],
+    [('40', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('platinum', 'B-METAL'), ('on', 'O'), ('aluminum oxide', 'B-SUPPORT')],
+    [('96', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('nickel', 'B-METAL'), ('on', 'O'), ('cerium oxide', 'B-SUPPORT')],
+    [('120', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('rhodium', 'B-METAL'), ('on', 'O'), ('magnesium oxide', 'B-SUPPORT')],
+    [('150', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('gold', 'B-METAL'), ('on', 'O'), ('magnetite', 'B-SUPPORT')],
+    [('70', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('iridium', 'B-METAL'), ('on', 'O'), ('yttrium oxide', 'B-SUPPORT')],
+    [('98', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('copper', 'B-METAL'), ('on', 'O'), ('silicon dioxide', 'B-SUPPORT')],
+    [('65', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('ruthenium', 'B-METAL'), ('on', 'O'), ('aluminum oxide', 'B-SUPPORT')],
+    [('102', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('platinum', 'B-METAL'), ('on', 'O'), ('hydroxyapatite', 'B-SUPPORT')],
+    [('110', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('nickel', 'B-METAL'), ('on', 'O'), ('zinc oxide', 'B-SUPPORT')],
+    [('85', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('iridium', 'B-METAL'), ('on', 'O'), ('manganese oxide', 'B-SUPPORT')],
+    [('120', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('osmium', 'B-METAL'), ('on', 'O'), ('hydroxyapatite', 'B-SUPPORT')],
+    [('60', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('rhodium', 'B-METAL'), ('on', 'O'), ('calcium oxide', 'B-SUPPORT')],
+    [('75', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('ruthenium', 'B-METAL'), ('on', 'O'), ('magnesium oxide', 'B-SUPPORT')],
+    [('55', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('cobalt', 'B-METAL'), ('on', 'O'), ('graphene oxide', 'B-SUPPORT')],
+    [('65', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('platinum', 'B-METAL'), ('on', 'O'), ('titanium dioxide', 'B-SUPPORT')],
+    [('50', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('nickel', 'B-METAL'), ('on', 'O'), ('silicon dioxide', 'B-SUPPORT')],
+    [('90', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('iridium', 'B-METAL'), ('on', 'O'), ('titanium oxide', 'B-SUPPORT')],
+    [('40', 'B-QUANTITY'), ('g', 'B-UNIT'), ('of', 'O'), ('palladium', 'B-METAL'), ('on', 'O'), ('titanium dioxide', 'B-SUPPORT')]
+]
+
+
+# Prepare training data
+X_train, y_train = prepare_data(dataset)
+
+# Train CRF model
+crf = sklearn_crfsuite.CRF(
+    algorithm='lbfgs',
+    c1=0.1,  # L1 regularization
+    c2=0.1,  # L2 regularization
+    max_iterations=100,
+    all_possible_transitions=True
+)
+crf.fit(X_train, y_train)
+
+# Function to process and predict on a single input prompt
+def process_input(input_prompt):
+    # Tokenize the input prompt (you can improve this tokenization logic)
+    tokens = input_prompt.split()
+    
+    # Handle hyphenated words by replacing hyphens with spaces
+    tokens = [' '.join(token.split('-')) for token in tokens]  # Merge hyphenated terms into single tokens
+    
+    sentence = [(token, 'O') for token in tokens]  # Placeholder labels for tokenized input
+    
+    # Extract features from the sentence
+    X_input = [extract_features(sentence, i) for i in range(len(sentence))]
+    
+    # Predict labels for the input
+    y_pred = crf.predict([X_input])[0]  # Get the predicted labels for the sentence
+    
+    # Initialize a 98x1 vector (all zeros initially)
+    vector = [0] * 98
+    
+    # Extract and map the labels to the feature vector
+    quantity = None
+    for token, label in zip(tokens, y_pred):
+        if label == 'B-QUANTITY' and token.isdigit():
+            quantity = float(token)  # Store the quantity value
+            
+        elif label == 'B-METAL' and token.lower() in entity_to_column:
+            # Map quantity to the corresponding metal column
+            column = entity_to_column[token.lower()]
+            if quantity:
+                vector[column] = quantity  # Set the quantity in the correct column
+            else:
+                vector[column] = 1  # Set to 1 if no quantity is found
+        
+        elif label == 'B-PROMOTER' and token.lower() in entity_to_column:
+            # Map quantity to the corresponding promoter column
+            column = entity_to_column[token.lower()]
+            if quantity:
+                vector[column] = quantity  # Set the quantity in the correct column
+            else:
+                vector[column] = 1  # Set to 1 if no quantity is found
+        
+        elif label == 'B-SUPPORT' and token.lower() in entity_to_column:
+            # Map quantity to the corresponding support column
+            column = entity_to_column[token.lower()]
+            if quantity:
+                vector[column] = quantity  # Set the quantity in the correct column
+            else:
+                vector[column] = 1  # Set to 1 if no quantity is found
+        
+        elif label == 'B-METHOD' and token.lower() in entity_to_column:
+            # Set process column to 1 if a process is mentioned
+            column = entity_to_column[token.lower()]
+            vector[column] = 1
+    
+    return vector
+
+# Example usage:
+input_prompt = "98 g of cesium with 65 vol.% of carbon-monoxide using dip-coating process"
+vector = process_input(input_prompt)
+
+# Print the 98x1 vector (you can print or return it as needed)
+print(vector)
