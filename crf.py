@@ -150,52 +150,51 @@ crf.fit(X_train, y_train)
 
 # Function to process and predict on a single input prompt
 def process_input(input_prompt):
-    # Tokenize the input prompt (you can improve this tokenization logic)
+
     tokens = input_prompt.split()
     
-    # Handle hyphenated words by replacing hyphens with spaces
     tokens = [' '.join(token.split('-')) for token in tokens]  # Merge hyphenated terms into single tokens
+
+    sentence = [(token, 'O') for token in tokens]  
     
-    sentence = [(token, 'O') for token in tokens]  # Placeholder labels for tokenized input
-    
-    # Extract features from the sentence
     X_input = [extract_features(sentence, i) for i in range(len(sentence))]
     
-    # Predict labels for the input
-    y_pred = crf.predict([X_input])[0]  # Get the predicted labels for the sentence
+    # Prediction
+    y_pred = crf.predict([X_input])[0]  #
     
     # Initialize a 98x1 vector (all zeros initially)
     vector = [0] * 98
     
-    # Extract and map the labels to the feature vector
+   
     quantity = None
     for token, label in zip(tokens, y_pred):
         if label == 'B-QUANTITY' and token.isdigit():
-            quantity = float(token)  # Store the quantity value
+            quantity = float(token)  # quantity
             
         elif label == 'B-METAL' and token.lower() in entity_to_column:
             # Map quantity to the corresponding metal column
             column = entity_to_column[token.lower()]
             if quantity:
-                vector[column] = quantity  # Set the quantity in the correct column
+                vector[column] = quantity 
             else:
-                vector[column] = 1  # Set to 1 if no quantity is found
+                vector[column] = 1  
         
         elif label == 'B-PROMOTER' and token.lower() in entity_to_column:
             # Map quantity to the corresponding promoter column
             column = entity_to_column[token.lower()]
             if quantity:
-                vector[column] = quantity  # Set the quantity in the correct column
+                vector[column] = quantity  
             else:
-                vector[column] = 1  # Set to 1 if no quantity is found
+                vector[column] = 1  
         
         elif label == 'B-SUPPORT' and token.lower() in entity_to_column:
             # Map quantity to the corresponding support column
             column = entity_to_column[token.lower()]
             if quantity:
-                vector[column] = quantity  # Set the quantity in the correct column
+                vector[column] = quantity  
             else:
-                vector[column] = 1  # Set to 1 if no quantity is found
+                vector[column] = 1 
+        
         
         elif label == 'B-METHOD' and token.lower() in entity_to_column:
             # Set process column to 1 if a process is mentioned
@@ -205,7 +204,7 @@ def process_input(input_prompt):
     return vector
 
 # Example usage:
-input_prompt = "98 g of cesium with 65 vol.% of carbon-monoxide using dip-coating process"
+input_prompt = "98 g of cesium with 65 vol.% of carbon-monoxide using dip-coating process under 300 degree temperature"
 vector = process_input(input_prompt)
 
 # Print the 98x1 vector (you can print or return it as needed)
