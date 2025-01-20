@@ -12,8 +12,13 @@ import glob
 import os
 load_dotenv()
 
+# Imports
+MODEL = os.getenv("MODEL")
 
-pdf_folder_path = "/Users/fabianjudohandoko/Desktop/VSCode/FYP/WGS-PDFs"  # Update this path
+# Relative import for WGS-PDF2 Database
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+pdf_folder_path = os.path.join(parent_dir, 'WGS-PDF1')
 pdf_files = glob.glob(f"{pdf_folder_path}/*.pdf")
 
 docs_text = []
@@ -39,7 +44,7 @@ retriever = vectorstore.as_retriever(
 )
 
 # model
-llm = ChatOpenAI(model='gpt-4o-mini')
+llm = ChatOpenAI(model=MODEL)
 
 prompt = ChatPromptTemplate.from_messages(
         [

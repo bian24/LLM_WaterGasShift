@@ -5,7 +5,7 @@ import pickle
 
 load_dotenv
 
-from call_model import call_model
+from main.call_model import call_model
 
 
 def answer_question(question: str) -> int:
