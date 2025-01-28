@@ -1,3 +1,6 @@
+# This file refers to the RAG1 part of the project
+# RAG system using the mentioned Database1 of pdf format
+
 from dotenv import load_dotenv
 
 from langchain.chains import create_retrieval_chain
@@ -14,18 +17,29 @@ load_dotenv()
 
 # Imports
 MODEL = os.getenv("MODEL")
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT")
 
 # Relative import for WGS-PDF2 Database
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+parent_dir = os.path.abspath(
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), '..'
+    )
+)
 pdf_folder_path = os.path.join(parent_dir, 'WGS-PDF1')
 pdf_files = glob.glob(f"{pdf_folder_path}/*.pdf")
 
 docs_text = []
 for doc in pdf_files:
-    loader = PyPDFLoader(doc)
-    docs = loader.load()
-    docs_text.append(docs[0])
+    try:
+
+        loader = PyPDFLoader(doc)
+        docs = loader.load()
+
+        for page in docs:
+
+            docs_text.append(page)
+    except Exception as e:
+        print(f"Error loading {doc}: {e}")
 
 # text splitter
 text_splitter = RecursiveCharacterTextSplitter(
@@ -33,7 +47,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 all_splits = text_splitter.split_documents(docs_text)
 
-# vectorstore
+# Chroma vectorstore
 vectorstore = Chroma.from_documents(
     documents=all_splits, embedding=OpenAIEmbeddings()
 )
@@ -53,11 +67,14 @@ prompt = ChatPromptTemplate.from_messages(
             you are an expert researcher particularly in the field of water gas-shift reactions
             here are some references that you can use to aid in the answering of the questions
             take time in answering, do not give not factual answers
-            please try to search throughout the databse of documents that you have first 
-            to answer, otherwise if you don't find a clear answer, you're free to search the internet as well
-            but you also need to mention from which source do you got it from
-            be scientifically accurate in your answer and provide relevant in-depth explanations where you
-            deem necessary
+            please try to search throughout the database of documents that you have as references and guides
+            the answer you might need to come up could possibly come up from multiple files
+            so it is possible for you to piece answer together from different files
+            you are only allowed to give answers from this particular database
+            do not cite papers that do not exist from within these collection of papers
+            you are also allowed to make your own reasoning if you have the need to do so
+            the pdf files have been named in a way that it contain the names of the author and the year of publication
+            be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
             {context}"""),
             ("human", "{input}")
         ]
