@@ -1,0 +1,102 @@
+1. What are the primary reactants and products in the overall water-gas shift (WGS) reaction on platinum (Pt)?
+2. What is identified as the rate-determining step for the WGS reaction on Pt, and why is it significant?
+3. What is the range of reaction temperatures for high and low-temperature shifts over FeeCr and CueZn catalysts mentioned in the article?
+4. What are the main catalytic processes mentioned for hydrogen production from hydrocarbons?
+5. How does the use of different catalysts, like Fe/Cr and Cu/Zn, affect the temperature range and efficiency of the WGS reaction?
+6. What are the main catalytic processes used for clean hydrogen production from hydrocarbons as discussed in the article?
+7. How does the integration of high-throughput characterization improve the prediction performance of catalytic QSPR models?
+8. Which preparation variable was identified as the most significant for the catalytic activity of Pd/Al2O3 in the hydrogenation of 1,3-butadiene?
+9. How did the regression tree model reveal the preparation pathways for Pd/Al2O3 catalysts?
+10. How were SVMs applied to the two datasets (olefin epoxidation and paraffin isomerization) in the study, and what were the results?
+11. How was artificial neural network (ANN) used to analyze selective CO oxidation over copper-based catalysts, and what was the scope of the database?
+12. What distinguished the performance of Au/HAP and Ru/HAP in the water gas shift reaction?
+13. Why are low-content gold–ceria catalysts considered potential candidates for fuel cell power production?
+14. In what form is gold primarily present in the as-prepared Au/CeZrO4 catalysts, and what impact does this have on WGS activity?
+15. How does Au/CeZrO4 compare to Pt/CeZrO4 in terms of low-temperature WGS activity, and what is the reason for this difference?
+16. What is the effect of varying the CO/O2 ratio (λ) on the performance of the 1% Pt-3A catalyst?
+17. Which noble metal demonstrated the highest turnover frequency (TOF) for CO conversion in TiO2-supported catalysts, and how does it compare to others?
+18. How does the promotion of TiO2 with calcium affect the activity and properties of Pt/TiO2 catalysts for the water-gas shift reaction?
+19. What effect does support composition have on the mechanism of the water-gas shift (WGS) reaction over supported-Pt catalysts?
+20. How do the chemisorptive properties of Pt/TiO2 catalysts change with the addition of alkaline earth metals?
+21. How do noble metals used in alumina-supported catalysts influence the water-gas shift reaction?
+22. How does La doping influence the stability of Au-ceria catalysts in the water-gas shift reaction?
+23. What was the observed effect of gold loading on the catalytic activity of Au/CeO2 catalysts for the water-gas shift (WGS) reaction?
+24. What potential application is suggested for the Na-promoted Pt/TiO2 catalyst based on its performance in the water gas shift reaction?
+25. How does the performance of Au/CeO2 compare to CuO/ZnO/Al2O3 over a range of temperatures for stability in the WGS reaction?
+26. What was identified as the main cause of deactivation in the Pt/TiO2 catalyst during the water gas shift reaction?
+27. How was the reaction rate of WGS evaluated in terms of catalyst effectiveness?
+28. How do Pt/Ce0.8Zr0.2O2 and Pt/Ce0.2Zr0.8O2 catalysts compare in terms of performance for the water gas shift reaction?
+29. Why is Pt/Ce0.8Zr0.2O2 considered a promising candidate for the single-stage water gas shift reaction?
+30. What method was used to prepare the HfO2 support in the study?
+31. Can you compare how the adsorption of CO differs between unpromoted HfO2 and Pt-promoted HfO2 under the same conditions during the study?
+32. What preparation method was used to create the Pt/CeO2/Al2O3 catalyst?
+33. What difference in byproduct formation was observed between Pt/CeO2 and Pt/CeO2/Al2O3 catalysts at high pressure?
+34. What role do alkali ions play in the activity of Pt-based catalysts for the low-temperature WGS reaction?
+35. How does the microemulsion-prepared Pt/CeO2 catalyst compare to traditional coprecipitation and wet impregnation methods in terms of water-gas shift activity and selectivity?
+36. What synthesis technique was used to prepare the noble metal core-ceria shell catalysts in the study?
+37. How does the performance of Mg-modified Pt/CeO2 catalysts compare to that of unmodified Pt/CeO2 catalysts?
+38. What effect does the addition of nickel have on the activity of Pt-Ni/Al2O3 catalysts for the water-gas shift reaction?
+39. Did the study observe any methane formation during the catalytic reaction tests?
+40. How does the reaction pressure influence CO conversion and H2 recovery in the Pd membrane reactor at 623 K?
+41. How does alkali promotion influence the water–gas shift activity of Pt/TiO2 catalysts according to the study?
+42. What is the proposed mechanism for the water-gas shift reaction on Pt supported on ceria-based solids?
+43. How does H2S affect the performance of Pt/CeO2 catalysts in the water-gas shift reaction?
+44. How does the presence of H2S affect the activity of Pt/CexZr1-xO2 catalysts in the water-gas shift reaction?
+45. How does the incorporation of ZrO2 affect the performance of Au-based catalysts in the medium temperature water-gas shift reaction?
+46. How does the catalytic performance of Pt–Ce/C catalysts compare to Pt/Ce catalysts in the low-temperature water-gas shift reaction?
+47. What is the proposed mechanism by which Pt helps maintain the activity of CeO2 in the presence of H2S?
+48. How does zirconium doping affect the properties of CeO2 in the Pt/CexZr1-xO2 catalysts?
+49. How does the CO conversion of Au-based catalysts on CeO2 mixed with Al2O3 or ZrO2 compare when using a realistic reformate stream?
+50. What catalyst demonstrated high activity for the water gas shift reaction without producing methane, and at what reduction temperature?
+51. How does the ceria surface area affect the concentration of surface formates in Pt/CeO2 catalysts?
+52. What role does the metal (Pt) play in the reduction of surface ceria in Pt/CeO2 catalysts?
+53. How were the Pt/Ce0.56Zr0.44O2 catalysts prepared for the low-temperature water-gas shift reaction in this study?
+54. What factors were found to influence the activity and stability of the Pt/Ce0.56Zr0.44O2 catalysts in the water-gas shift reaction?
+55. What difference in performance was observed between SCS and IWI catalysts during durability testing?
+56. How were Pt/CeO2 nanofibers prepared for use in the water-gas shift reaction?
+57. What advantages do Pt/CeO2 nanofibers have compared to other catalyst forms in the water-gas shift reaction?
+58. Why is electrospinning a beneficial method for preparing Pt/CeO2 catalysts for the water-gas shift reaction?
+59. What was the primary objective of the study on Pt-based catalysts for the water-gas shift reaction?
+60. How did the Pt/TiO2 catalysts perform in the water-gas shift reaction compared to Pt/SiO2 and Pt/CeO2?
+61. What role did Pt play on Pt/CeO2 catalysts in the water-gas shift reaction?
+62. What catalysts were found to show strong synergetic promoting effects in the oxygen-enhanced water gas shift (OWGS) reaction?
+63. How does the incorporation of Pd into a Cu/CeO2 catalyst affect its activity in the OWGS reaction?
+64. What structural characteristics of the Pd–Cu/CeO2 catalyst contribute to its improved performance in OWGS compared to Pt–Cu/CeO2?
+65. How does doping ceria with Ca2+ influence the low-temperature water-gas shift (LT-WGS) reaction?
+66. What effect does Ca-doping have on the X-ray diffraction patterns of ceria, and what does this indicate?
+67. Compared to 0.5% Pt/CeO2, what are the catalytic performance and advantages of using 0.5% Pt/Ca0.50Ce0.50O1.5 in the LT-WGS reaction?
+68. What synthesis method was used to prepare the mesoporous titania support in this study?
+69. How did the addition of ceria affect the properties of the mesoporous titania support?
+70. What impact did the gold loading have on the catalytic activity of ceria-modified mesoporous titania catalysts for the WGS reaction?
+71. What technique was used to prepare Pt–ceria catalysts for the water gas shift reaction?
+72. Why are Pt on ceria-based catalysts considered promising alternatives for hydrogen production from water gas shift reactions?
+73. How does the CO conversion percentage of microemulsion-prepared Pt/ceria catalysts compare to other preparation methods in WGS reactions?
+74. What method was used to synthesize the Pt/CeO2 catalysts described in the study?
+75. How does the addition of dopants affect the WGS activity of Pt/CeO2 catalysts?
+76. What is the proposed mechanism by which dopants enhance the reducibility of the Pt/Ce-Me-O catalysts?
+77. How were the mixed oxide supports for Pt catalysts prepared in this study?
+78. What role do oxygen vacancies play in the performance of ceria-based catalysts in the WGS reaction according to the document?
+79. What was the effect of Zr doping on the particle size and surface area of ceria supports?
+80. What effect does the addition of sodium (Na) have on the Pt/TiO2 catalyst for the water gas shift reaction?
+81. How does the stability of the Pt–3Na/TiO2 catalyst vary with temperature during the water gas shift reaction?
+82. What potential application is suggested for the Na-promoted Pt/TiO2 catalyst based on its performance in the water gas shift reaction?
+83. What catalyst showed the highest CO conversion at 150°C in a typical reformate feed for the low-temperature water-gas shift reaction?
+84. How does the performance of Au/CeO2 compare to CuO/ZnO/Al2O3 over a range of temperatures for stability in the WGS reaction?
+85. What is the importance of choosing the appropriate catalytic system for the WGS reaction in terms of operating temperature?
+86. What was identified as the main cause of deactivation in the Pt/TiO2 catalyst during the water gas shift reaction?
+87. What experiments were conducted to understand the mechanism behind the deactivation of the Pt/TiO2 catalyst?
+88. How does the presence of strong metal-support interaction (SMSI) affect the deactivation of the Pt/TiO2 catalyst, according to the study?
+89. What catalyst was studied for the water-gas shift (WGS) reaction in this research?
+90. How was the reaction rate of WGS evaluated in terms of catalyst effectiveness?
+91. What was the purpose of considering an eggshell morphology for the Pt/CZO catalysts?
+92. How does the presence of different promoters (K, Ni, Co) affect the water gas shift activity of Pt/CeO2/Al2O3 catalysts?
+93. What role do modular neural networks play in the study of water gas shift activity in this work?
+94. Which operational variables were found to be most significant in determining the catalytic performance of the given catalysts?
+95. How do Pt/Ce0.8Zr0.2O2 and Pt/Ce0.2Zr0.8O2 catalysts compare in terms of performance for the water gas shift reaction?
+96. What are the observed phases of Ce1-xZrxO2 in the catalysts studied?
+97. Why is Pt/Ce0.8Zr0.2O2 considered a promising candidate for the single-stage water gas shift reaction?
+98. Which catalyst demonstrated higher CO conversion in the water gas shift reaction, Pt/Ce0.8Zr0.2O2 or Pt/Ce0.2Zr0.8O2?
+99. What characteristics of Pt/Ce0.8Zr0.2O2 contribute to its superior performance in the water gas shift reaction?
+100. Were both catalysts in the study able to selectively convert CO into CO2 without methanation?
+101. What method was used to prepare the HfO2 support in the study?
+102. Can you compare how the adsorption of CO differs between unpromoted HfO2 and Pt-promoted HfO2 under the same conditions during the study?
