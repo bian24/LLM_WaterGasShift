@@ -1,33 +1,4 @@
 import sklearn_crfsuite
-from sklearn_crfsuite import metrics
-
-# Feature extraction for a token
-def extract_features(sentence, i):
-    token = sentence[i][0]
-    features = {
-        'word': token,
-        'is_upper': token.isupper(),
-        'is_title': token.istitle(),
-        'is_digit': token.isdigit(),
-    }
-    if i > 0:
-        features['prev_word'] = sentence[i-1][0]
-    else:
-        features['BOS'] = True  # Beginning of Sentence
-    
-    if i < len(sentence) - 1:
-        features['next_word'] = sentence[i+1][0]
-    else:
-        features['EOS'] = True  # End of Sentence
-    return features
-
-# Transform dataset into features and labels
-def prepare_data(data):
-    X, y = [], []
-    for sentence in data:
-        X.append([extract_features(sentence, i) for i in range(len(sentence))])
-        y.append([label for _, label in sentence])
-    return X, y
 
 # Entity lists
 metals = ['Platinum', 'Gold', 'Ruthenium', 'Rhodium', 'Iridium', 'Copper', 'Palladium', 'Nickel', 'Osmium', 'Rhenium']
@@ -135,10 +106,57 @@ dataset = [
 ]
 
 
-# Prepare training data
-X_train, y_train = prepare_data(dataset)
+def extract_features(sentence, i):
+    """
+    Map each feature in a prompt to its categorical type
+    
+    Args:
+        - sentence (str) prompt that depicts the experiment
+        - i (int) index position
 
-# Train CRF model
+    Returns:
+        - features (list)
+    """
+    token = sentence[i][0]
+    features = {
+        'word': token,
+        'is_upper': token.isupper(),
+        'is_title': token.istitle(),
+        'is_digit': token.isdigit(),
+    }
+    if i > 0:
+        features['prev_word'] = sentence[i-1][0]
+    else:
+        features['BOS'] = True 
+    
+    if i < len(sentence) - 1:
+        features['next_word'] = sentence[i+1][0]
+    else:
+        features['EOS'] = True 
+    return features
+
+
+def prepare_data(data):
+    """
+    Annotate datasets features to its corresponding labels
+    
+    Args:
+        - data(list)
+    
+    Returns:
+        - X(list) segmented features of a given prompt
+        - y(list) label of each corresponding feature to X
+    """
+    X, y = [], []
+    for sentence in data:
+        X.append([extract_features(sentence, i) for i in range(len(sentence))])
+        y.append([label for _, label in sentence])
+    
+    return X, y
+
+
+# Train CRF Model
+X_train, y_train = prepare_data(dataset)
 crf = sklearn_crfsuite.CRF(
     algorithm='lbfgs',
     c1=0.1,  # L1 regularization
@@ -148,15 +166,20 @@ crf = sklearn_crfsuite.CRF(
 )
 crf.fit(X_train, y_train)
 
-# Function to process and predict on a single input prompt
+
 def process_input(input_prompt):
-
+    """
+    Process Input and give a 98 x 1 resulting vector output of each feature mentioned
+    
+    Args:
+        - input_prompt(str) prompt that depict the experiment
+     
+    Returns:
+        - vector output (list) 98 x 1 list that characterizes the experiment of features"""
+    # Preprocess
     tokens = input_prompt.split()
-    
-    tokens = [' '.join(token.split('-')) for token in tokens]  # Merge hyphenated terms into single tokens
-
+    tokens = [' '.join(token.split('-')) for token in tokens] 
     sentence = [(token, 'O') for token in tokens]  
-    
     X_input = [extract_features(sentence, i) for i in range(len(sentence))]
     
     # Prediction
@@ -164,12 +187,10 @@ def process_input(input_prompt):
     
     # Initialize a 98x1 vector (all zeros initially)
     vector = [0] * 98
-    
-   
     quantity = None
     for token, label in zip(tokens, y_pred):
         if label == 'B-QUANTITY' and token.isdigit():
-            quantity = float(token)  # quantity
+            quantity = float(token)  
             
         elif label == 'B-METAL' and token.lower() in entity_to_column:
             # Map quantity to the corresponding metal column
@@ -195,17 +216,9 @@ def process_input(input_prompt):
             else:
                 vector[column] = 1 
         
-        
         elif label == 'B-METHOD' and token.lower() in entity_to_column:
             # Set process column to 1 if a process is mentioned
             column = entity_to_column[token.lower()]
             vector[column] = 1
     
     return vector
-
-# Example usage:
-input_prompt = "98 g of cesium with 65 vol.% of carbon-monoxide using dip-coating process under 300 degree temperature"
-vector = process_input(input_prompt)
-
-# Print the 98x1 vector (you can print or return it as needed)
-print(vector)
