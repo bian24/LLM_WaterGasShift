@@ -22,7 +22,7 @@ load_dotenv()
 # 2. WGS-PDF2: RAG2
 # 3. WGS-PDF12: RAG12
 FOLDER_PATH = "WGS-PDF2" 
-MODEL = os.getenv("MODEL")
+MODEL = os.getenv("LLM_MODEL")
 
 # Path to store persistent vector database
 VECTORSTORE_DIR = f"vectorstore_{FOLDER_PATH}.db"
