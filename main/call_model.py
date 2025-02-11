@@ -1,9 +1,12 @@
 #%%
+### PROBABLY NO LONGER NEEDED
+# BUT DON'T DELETE AFTER FINAL ONLY
 from dotenv import load_dotenv
 import numpy as np
 from openai import OpenAI
 import yaml
-import os
+
+from crf import process_input
 
 load_dotenv()
 
@@ -12,16 +15,15 @@ with open("env.yaml", "r") as stream:
     yaml_vars = yaml.safe_load(stream)
 
 
-
-def call_model(question):
-    # Define the input prompt
+def call_model(question: str):
+    # Input Prompt
     prompt = yaml_vars['system_prompt'].format(question = question)
     messages = [
         {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
         {"role": "user", "content": prompt}
     ]
 
-    # Define API
+    # API
     client = OpenAI()
     response = client.chat.completions.create(
         model=yaml_vars['model_name'],
@@ -30,27 +32,13 @@ def call_model(question):
     
     # Define possible components in the order provided
     all_components = yaml_vars['all_components']
-    # Define a single array with zeros
     combined_array = np.zeros(len(all_components))
 
-    # Define a limit for retries
-    max_retries = 100  
-    retry_count = 0
-    output = None
+    content = response.choices[0].message.content.replace("null", "None")
+    output = eval(eval(content))
 
-    # Error Handling
-    while retry_count < max_retries:
-        try:
-            content = response.choices[0].message.content.replace("null", "None")
-            output = eval(eval(content))
-            retry_count = 0 # reset retry_count
-            break  
-        except (TypeError, SyntaxError, NameError) as e:
-            retry_count += 1
-            if retry_count == max_retries:
-                return "Max retries reached. Could not evaluate content."
-    
-
+    output = eval(eval(process_input(question)))
+            
     for category, items in output.items():
         if isinstance(items, dict):  
             for item, value in items.items():
