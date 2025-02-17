@@ -2,7 +2,7 @@
 # Final Year Project
 
 
-## Large Language Models for Water Gas Shift Research
+### Large Language Models for Water Gas Shift Research
 
 
 ### File Structure
@@ -19,6 +19,7 @@ the recommended file structure would be:
 In order to speed up development process, we recommend that the structure is followed, 
 otherwise you can made changes with regards to the folder destination.
 
+### Required packages
 After the file structure has been set, install the relevant packages to this project by doing:
 
 ```
