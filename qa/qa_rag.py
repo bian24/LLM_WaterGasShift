@@ -11,7 +11,7 @@ import time
 # 1. rag_1_script.csv: RAG1
 # 2. rag_2_script.csv: RAG2
 # 3. rag_12_script.csv: RAG12
-RAG_FILE = "rag_2_script"
+RAG_FILE = "rag_2"
 FOLDER_PATH = "script"
 CSV_FILE = f"{FOLDER_PATH}/{RAG_FILE}"
 
