@@ -15,9 +15,9 @@ with open("env.yaml", "r") as stream:
     yaml_vars = yaml.safe_load(stream)
 
 
-def call_model(question: str):
+def call_model(query: str):
     # Input Prompt
-    prompt = yaml_vars['system_prompt'].format(question = question)
+    prompt = yaml_vars['system_prompt'].format(query = query)
     messages = [
         {"role": "system", "content": "You are a helpful assistant that extracts features from natural language prompts."},
         {"role": "user", "content": prompt}
@@ -37,7 +37,7 @@ def call_model(question: str):
     content = response.choices[0].message.content.replace("null", "None")
     output = eval(eval(content))
 
-    output = eval(eval(process_input(question)))
+    output = eval(eval(process_input(query)))
             
     for category, items in output.items():
         if isinstance(items, dict):  

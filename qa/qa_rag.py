@@ -1,4 +1,4 @@
-from main.rag import rag
+from main.rag import RAG
 
 import csv
 import re
@@ -11,23 +11,23 @@ import time
 # 1. rag_1_script.csv: RAG1
 # 2. rag_2_script.csv: RAG2
 # 3. rag_12_script.csv: RAG12
-RAG_FILE = "rag_2"
 FOLDER_PATH = "script"
-CSV_FILE = f"{FOLDER_PATH}/{RAG_FILE}"
+RAG_VER = "rag_2"
+
+FILE = f"{FOLDER_PATH}/{RAG_VER}"
 
 start_time = time.time()
 
-# Read CSV
-question_csv = open(f"{CSV_FILE}.csv", mode="r", encoding="utf-8")
+# Question and Answer CSV
+question_csv = open(f"{FILE}.csv", mode="r", encoding="utf-8")
 question_read = csv.reader(question_csv)
-
-# Answer CSV
-ans_csv = open(f"{CSV_FILE}_answer.csv", mode="w", encoding="utf-8")
+ans_csv = open(f"{FILE}_answer.csv", mode="w", encoding="utf-8")
 ans_writer = csv.writer(ans_csv)
 
+rag = RAG()
 number = 1
-for question in question_read:
-    answer = re.sub(r'[\*"]', "", rag(str(question)))
+for query in question_read:
+    answer = re.sub(r'[\*"]', "", rag.generate_answer(str(query)))
     ans_writer.writerow([f"{number}. {answer}"])
     ans_writer.writerow([])
     number+=1

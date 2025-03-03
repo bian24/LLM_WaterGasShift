@@ -81,8 +81,8 @@ agent = (
 from langchain.agents import AgentExecutor
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
-question = "predict co conversion"
-question_input = agent_executor.stream({"input": question})
+query = "predict co conversion"
+question_input = agent_executor.stream({"input": query})
 result = list(question_input)
 #%%
 # %%
