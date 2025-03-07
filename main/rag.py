@@ -2,7 +2,7 @@
 # Can be interchange across different RAG systems by adjusting its designated database
 
 from dotenv import load_dotenv
-from langchain.chains import create_retrieval_chain
+from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
@@ -22,6 +22,7 @@ MODEL = os.getenv("LLM_MODEL")
 # 1. WGS-PDF1: RAG1
 # 2. WGS-PDF2: RAG2
 # 3. WGS-PDF12: RAG12
+# 4. WGS-PDF3: RAG3
 PDF_PATH = "WGS-PDF2" 
 
 
@@ -30,11 +31,7 @@ class RAG:
         self.llm = ChatOpenAI(model = MODEL)
         self.embeddings = OpenAIEmbeddings()
         self.docs = None
-        self.vectorstore = None
         self.vectorstore_dir = f"vectorstore_{PDF_PATH}.db"
-    
-    
-    def load_or_create_vectorstore(self):
         # Check if vectorstore exists
         if os.path.exists(self.vectorstore_dir):
             print("Loading existing vectorstore...")
@@ -89,10 +86,10 @@ class RAG:
             here are some references that you can use to aid in the answering of the questions
             take time in answering, do not give not factual answers
             please try to search throughout the database of documents that you have as references and guides
-            the answer you might need to come up could possibly come up from multiple files
+            the answer you might need could possibly come up from multiple files
             so it is possible for you to piece answer together from different files
             you are only allowed to give answers from this particular database
-            do not cite papers that do not exist from within these collection of papers
+            do not cite sources that do not exist from within these collection of database
             you are also allowed to make your own reasoning if you have the need to do so
             the pdf files have been named in a way that it contain the names of the author and the year of publication
             be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary

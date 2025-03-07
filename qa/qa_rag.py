@@ -29,10 +29,6 @@ number = 1
 for query in question_read:
     answer = re.sub(r'[\*"]', "", rag.generate_answer(str(query)))
     ans_writer.writerow([f"{number}. {answer}"])
-    ans_writer.writerow([])
     number+=1
 
-end_time = time.time()
-ans_writer.writerow(["-"*100])
-ans_writer.writerow([f"Total time is {round(end_time-start_time,2)} second"])
 ans_csv.close()
