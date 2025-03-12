@@ -2,6 +2,9 @@
 # Can be interchange across different RAG systems by adjusting its designated database
 
 from dotenv import load_dotenv
+from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors.listwise_rerank import LLMListwiseRerank
+from langchain.retrievers.document_compressors import LLMChainExtractor
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_chroma import Chroma
@@ -9,6 +12,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.retrievers import ContextualCompressionRetriever
 import glob
 import os
 
@@ -52,7 +56,7 @@ class RAG:
                 except Exception as e:
                     print(f"Error loading {doc}: {e}")
 
-            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200, add_start_index=True)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200, add_start_index=True)
             all_splits = text_splitter.split_documents(docs_text)
 
             # Create the vectorstore
@@ -65,25 +69,40 @@ class RAG:
 
 
     def get_most_relevant_content(self, query):
-        """
-        Find the most relevant document for a given query.
-        """
         
-        retrieved_docs = self.vectorstore.similarity_search(query, k=1)
-        relevant_content = [doc.page_content for doc in retrieved_docs]
+        base_retriever = self.vectorstore.as_retriever(search_kwargs={'k': 2})
+        llm = self.llm
+        
+        filter = LLMListwiseRerank.from_llm(llm, top_n=5)
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=filter,
+            base_retriever=base_retriever
+        )
+        compressed_docs = compression_retriever.invoke(query)
+        compressed_content = " ".join([doc.page_content for doc in compressed_docs])
 
-        return relevant_content
-
-
+        return compressed_content
+        
+    
     def generate_answer(self, query):
-        retriever = self.vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 5})
+        # Initialize
+        base_retriever = self.vectorstore.as_retriever(search_kwargs={'k': 5})
         llm = self.llm
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", 
-            """
+        # Filter and Compress
+        filter = LLMListwiseRerank.from_llm(llm, top_n=10)
+        compression_retriever = ContextualCompressionRetriever(
+            base_compressor=filter,
+            base_retriever=base_retriever
+        )
+        compressed_docs = compression_retriever.invoke(query)
+        compressed_context = " ".join([doc.page_content for doc in compressed_docs])
+
+
+        prompt_text="""
             you are an expert researcher particularly in the field of water gas-shift reactions
             here are some references that you can use to aid in the answering of the questions
+            {context}
             take time in answering, do not give not factual answers
             please try to search throughout the database of documents that you have as references and guides
             the answer you might need could possibly come up from multiple files
@@ -94,13 +113,16 @@ class RAG:
             the pdf files have been named in a way that it contain the names of the author and the year of publication
             be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
             Remove all characters in this list["*]
-            {context}
-            """),
+            
+        """
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", prompt_text),
             ("human", "{input}")
         ])
 
+        # chain creation
         qa_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, qa_chain)
-
-        responses = rag_chain.invoke({"input": query})
-        return responses['answer']
+        rag_chain = create_retrieval_chain(base_retriever, qa_chain)
+        answer = rag_chain.invoke({"input": query, "context": compressed_context})['answer']
+       
+        return answer
