@@ -2,24 +2,24 @@
 # Can be interchange across different RAG systems by adjusting its designated database
 
 from dotenv import load_dotenv
-from langchain.retrievers import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors.listwise_rerank import LLMListwiseRerank
-from langchain.retrievers.document_compressors import LLMChainExtractor
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.retrievers import ContextualCompressionRetriever
+from langchain.retrievers.document_compressors.listwise_rerank import LLMListwiseRerank
+
 import glob
 import os
 
 load_dotenv()
 
 # IMPORTS
-MODEL = os.getenv("LLM_MODEL")
+LLM_MODEL = os.getenv("LLM_MODEL")
 
 # TO BE ADJUSTED FOLDER PATH
 # List of Available Folders
@@ -32,11 +32,19 @@ PDF_PATH = "WGS-PDF2"
 
 class RAG:
     def __init__(self):
-        self.llm = ChatOpenAI(model = MODEL)
-        self.embeddings = OpenAIEmbeddings()
         self.docs = None
+        self.llm = None
         self.vectorstore_dir = f"vectorstore_{PDF_PATH}.db"
-        # Check if vectorstore exists
+        
+        # LLM Selection
+        if "gpt" in LLM_MODEL:
+            self.llm = ChatOpenAI(model = LLM_MODEL)
+            self.embeddings = OpenAIEmbeddings()
+        if "llama" in LLM_MODEL:
+            self.llm = ChatOllama(model = LLM_MODEL)
+            self.embeddings = OllamaEmbeddings(model = LLM_MODEL)
+        
+        # Vectorstore verification
         if os.path.exists(self.vectorstore_dir):
             print("Loading existing vectorstore...")
             self.vectorstore = Chroma(persist_directory=self.vectorstore_dir, embedding_function=OpenAIEmbeddings())
@@ -60,25 +68,26 @@ class RAG:
             all_splits = text_splitter.split_documents(docs_text)
 
             # Create the vectorstore
-            vectorstore = Chroma.from_documents(
+            self.vectorstore = Chroma.from_documents(
                 documents=all_splits,
-                embedding=OpenAIEmbeddings(),
+                embedding=self.embeddings,
                 persist_directory=self.vectorstore_dir
             )
-            self.vectorstore = vectorstore
 
 
     def get_most_relevant_content(self, query):
         
-        base_retriever = self.vectorstore.as_retriever(search_kwargs={'k': 2})
         llm = self.llm
+        retriever = self.vectorstore.as_retriever(search_kwargs={'k': 2})
         
-        filter = LLMListwiseRerank.from_llm(llm, top_n=5)
-        compression_retriever = ContextualCompressionRetriever(
-            base_compressor=filter,
-            base_retriever=base_retriever
+        
+        ranker = LLMListwiseRerank.from_llm(llm, top_n=5)
+        retriever = ContextualCompressionRetriever(
+            base_compressor=ranker,
+            base_retriever=retriever
         )
-        compressed_docs = compression_retriever.invoke(query)
+        
+        compressed_docs = retriever.invoke(query)
         compressed_content = " ".join([doc.page_content for doc in compressed_docs])
 
         return compressed_content
@@ -86,34 +95,34 @@ class RAG:
     
     def generate_answer(self, query):
         # Initialize
-        base_retriever = self.vectorstore.as_retriever(search_kwargs={'k': 5})
         llm = self.llm
+        retriever = self.vectorstore.as_retriever(search_kwargs={'k': 5})
 
         # Filter and Compress
         filter = LLMListwiseRerank.from_llm(llm, top_n=10)
-        compression_retriever = ContextualCompressionRetriever(
+        retriever = ContextualCompressionRetriever(
             base_compressor=filter,
-            base_retriever=base_retriever
+            base_retriever=retriever
         )
-        compressed_docs = compression_retriever.invoke(query)
+
+        compressed_docs = retriever.invoke(query)
         compressed_context = " ".join([doc.page_content for doc in compressed_docs])
 
 
         prompt_text="""
-            you are an expert researcher particularly in the field of water gas-shift reactions
-            here are some references that you can use to aid in the answering of the questions
-            {context}
-            take time in answering, do not give not factual answers
-            please try to search throughout the database of documents that you have as references and guides
-            the answer you might need could possibly come up from multiple files
-            so it is possible for you to piece answer together from different files
-            you are only allowed to give answers from this particular database
-            do not cite sources that do not exist from within these collection of database
-            you are also allowed to make your own reasoning if you have the need to do so
-            the pdf files have been named in a way that it contain the names of the author and the year of publication
-            be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
-            Remove all characters in this list["*]
-            
+        you are an expert researcher particularly in the field of water gas-shift reactions
+        here are some references that you can use to aid in the answering of the questions
+        {context}
+        take time in answering, do not give not factual answers
+        please try to search throughout the database of documents that you have as references and guides
+        the answer you might need could possibly come up from multiple files
+        so it is possible for you to piece answer together from different files
+        you are only allowed to give answers from this particular database
+        do not cite sources that do not exist from within these collection of database
+        you are also allowed to make your own reasoning if you have the need to do so
+        the pdf files have been named in a way that it contain the names of the author and the year of publication
+        be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
+        Remove all characters in this list["*]  
         """
         prompt = ChatPromptTemplate.from_messages([
             ("system", prompt_text),
@@ -122,7 +131,7 @@ class RAG:
 
         # chain creation
         qa_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(base_retriever, qa_chain)
+        rag_chain = create_retrieval_chain(retriever, qa_chain)
         answer = rag_chain.invoke({"input": query, "context": compressed_context})['answer']
        
         return answer

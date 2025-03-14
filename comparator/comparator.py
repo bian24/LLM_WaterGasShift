@@ -10,7 +10,7 @@ from main.rag import RAG
 
 
 # Import
-MODEL = os.getenv("LLM_MODEL")
+LLM_MODEL = os.getenv("LLM_MODEL")
 
 # TO BE ADJUSTED RAG_FILE PATH
 # List of Available Files
@@ -39,7 +39,7 @@ for query, ground_truth, answer in zip(question_read, ground_truth_read, answer_
     dataset.append(
         {
             "user_input": query[0],
-            "retrieved_contexts": [(''.join(rag.get_most_relevant_content(str(query[0]))))],
+            #"retrieved_contexts": [(''.join(rag.get_most_relevant_content(str(query[0]))))],
             "response": answer[0],
             "reference": ground_truth[0]
         }
@@ -47,10 +47,13 @@ for query, ground_truth, answer in zip(question_read, ground_truth_read, answer_
 
 # Evaluation
 evaluation_dataset = EvaluationDataset.from_list(dataset)    
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model=MODEL))
+evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
 result = evaluate(
     dataset=evaluation_dataset, 
-    metrics=[FactualCorrectness(), Faithfulness(), ResponseRelevancy()], 
+    metrics=[FactualCorrectness(), ResponseRelevancy()], 
     llm=evaluator_llm
 )
-result.upload()
+
+# Export to CSV
+df = result.to_pandas()
+df.to_csv(f"run_{LLM_MODEL}.csv")

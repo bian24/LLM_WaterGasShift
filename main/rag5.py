@@ -8,7 +8,6 @@ load_dotenv()
 
 
 # Imports
-MODEL = os.getenv("ML_MODEL")
 XGB_MODEL = os.getenv("XGB_MODEL")
 
 

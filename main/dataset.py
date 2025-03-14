@@ -54,8 +54,17 @@ templates = [
     "The reaction used {QUANTITY} {MASS_UNIT} of {METAL}, {QUANTITY} {MASS_UNIT} of {PROMOTER}, and was carried out at {QUANTITY} {FLOW_RATE_UNIT} W/F."
 ]
 
-# Function to generate a synthetic sentence and its annotation
+
 def generate_synthetic_data(num_sentences):
+    """
+    generate synthetic datasets in terms of sample sentences
+    that might occur in real-world settings.
+    
+    Args:
+        - num_sentences(int)
+    Returns:
+        - list(sentences)
+    """
     data = []
 
     for _ in range(num_sentences):
