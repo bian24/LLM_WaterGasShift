@@ -1,6 +1,7 @@
-import json
+import csv
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import os
 
 
@@ -8,23 +9,14 @@ import os
 LLM_MODEL = os.getenv("LLM_MODEL")
 
 # Load JSON data
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-path = f"{parent_dir}/run/{LLM_MODEL}_run.json"
+folder = os.path.dirname(os.path.abspath(__file__))
 
-with open(path, "r") as file:
-    data = json.load(file)
 
 # Extract factual correctness and answer relevance scores
-factual_correctness, answer_relevance, semantic_similarity = [], [], []
-
-for entry in data['factual_correctness']:
-    factual_correctness.append(entry['metric_output'])
-for entry in data['answer_relevancy']:
-    answer_relevance.append(entry['metric_output'])
-for entry in data['semantic_similarity']:
-    semantic_similarity.append(entry['semantic_similarity'])
-
-
+data = pd.read_csv(f"{folder}/run_{LLM_MODEL}.csv")
+factual_correctness = data['factual_correctness']
+answer_relevance = data['answer_relevancy']
+semantic_similarity = data['semantic_similarity']
 # Create histogram
 plt.figure(figsize=(10, 5))
 plt.hist([factual_correctness, answer_relevance, semantic_similarity], bins=np.arange(0, 1.1, 0.1), label=["Factual Correctness", "Answer Relevance", "Semantic Similarity"], alpha=0.7)

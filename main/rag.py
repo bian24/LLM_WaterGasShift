@@ -18,8 +18,6 @@ import os
 
 load_dotenv()
 
-# IMPORTS
-LLM_MODEL = os.getenv("LLM_MODEL")
 
 # TO BE ADJUSTED FOLDER PATH
 # List of Available Folders
@@ -31,10 +29,10 @@ PDF_PATH = "WGS-PDF2"
 
 
 class RAG:
-    def __init__(self):
+    def __init__(self, LLM_MODEL):
         self.docs = None
-        self.llm = None
-        self.vectorstore_dir = f"vectorstore_{PDF_PATH}.db"
+        self.llm = LLM_MODEL
+        self.vectorstore_dir = f"vectorstore_{PDF_PATH}_{LLM_MODEL}.db"
         
         # LLM Selection
         if "gpt" in LLM_MODEL:

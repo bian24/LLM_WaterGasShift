@@ -4,9 +4,7 @@ from langchain_openai import ChatOpenAI
 from ragas import EvaluationDataset
 from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
-from ragas.metrics import ResponseRelevancy, FactualCorrectness, Faithfulness
-
-from main.rag import RAG
+from ragas.metrics import ResponseRelevancy, FactualCorrectness, SemanticSimilarity
 
 
 # Import
@@ -22,24 +20,25 @@ FOLDER_PATH = "script"
 RAG_VER= "rag_2"
 FILE = f"{FOLDER_PATH}/{RAG_VER}"
 
-rag = RAG()
 
-# Question and Ground Truth CSV
+# Question CSV
 question_csv = open(f"{FILE}.csv", mode="r", encoding="utf-8")
 question_read = csv.reader(question_csv)
+
+# Ground Truth CSV
 ground_truth_csv = open(f"{FILE}_ground_truth.csv", mode="r", encoding="utf-8")
 ground_truth_read = csv.reader(ground_truth_csv)
+
+# Answer CSV
 answer_csv = open(f"{FILE}_answer.csv", mode="r", encoding="utf-8")
 answer_read = csv.reader(answer_csv)
 
-
+# Dataset Creation
 dataset = []
-
 for query, ground_truth, answer in zip(question_read, ground_truth_read, answer_read):
     dataset.append(
         {
             "user_input": query[0],
-            #"retrieved_contexts": [(''.join(rag.get_most_relevant_content(str(query[0]))))],
             "response": answer[0],
             "reference": ground_truth[0]
         }
@@ -47,13 +46,17 @@ for query, ground_truth, answer in zip(question_read, ground_truth_read, answer_
 
 # Evaluation
 evaluation_dataset = EvaluationDataset.from_list(dataset)    
-evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model="gpt-4o-mini"))
+evaluator_llm = LangchainLLMWrapper(ChatOpenAI(model=LLM_MODEL))
 result = evaluate(
     dataset=evaluation_dataset, 
-    metrics=[FactualCorrectness(), ResponseRelevancy()], 
+    metrics=[FactualCorrectness(), ResponseRelevancy(), SemanticSimilarity()], 
     llm=evaluator_llm
 )
 
-# Export to CSV
+# Dashboard Viewing
+result.upload()
+
+# CSV Export
 df = result.to_pandas()
-df.to_csv(f"run_{LLM_MODEL}.csv")
+folder = os.path.dirname(os.path.abspath(__file__))
+df.to_csv(f"{folder}/run_{LLM_MODEL}.csv")
