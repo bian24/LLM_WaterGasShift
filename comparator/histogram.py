@@ -5,23 +5,32 @@ import pandas as pd
 import os
 
 
-#IMPORTS
+# IMPORTS
 LLM_MODEL = os.getenv("LLM_MODEL")
+RAG_VER = "DB_2"
+RAG = ""
 
-# Load JSON data
+# Load data
 folder = os.path.dirname(os.path.abspath(__file__))
 
+# Extract factual correctness and answer relevance scoresz
 
-# Extract factual correctness and answer relevance scores
-data = pd.read_csv(f"{folder}/run_{LLM_MODEL}.csv")
-factual_correctness = data['factual_correctness']
-answer_relevance = data['answer_relevancy']
-semantic_similarity = data['semantic_similarity']
-# Create histogram
-plt.figure(figsize=(10, 5))
-plt.hist([factual_correctness, answer_relevance, semantic_similarity], bins=np.arange(0, 1.1, 0.1), label=["Factual Correctness", "Answer Relevance", "Semantic Similarity"], alpha=0.7)
-plt.xlabel("Score")
-plt.ylabel("Frequency")
-plt.title(f"Distribution of Factual Correctness and Answer Relevance Scores of {LLM_MODEL}")
-plt.legend()
-plt.show()
+data = pd.read_csv(f"{folder}/run_{RAG_VER}_{LLM_MODEL}.csv")
+data_points = {
+    'factual_correctness':  pd.Series(data['factual_correctness']),
+    'answer_relevancy': pd.Series(data['answer_relevancy']),
+    'semantic_similarity':  pd.Series(data['semantic_similarity'])
+}
+
+
+for metric_name, metric_values in data_points.items():
+    plt.figure(figsize=(20, 6))
+    plt.bar(metric_values.index, metric_values.values)
+    plt.axhline(y=0.5, color='red', linestyle='--', label='Level 0.5')
+    plt.axhline(y=metric_values.mean(), color='green', linestyle='--', label=f'Average: {metric_values.mean():.2f}')
+    plt.xlabel("Prompt")
+    plt.ylabel("Value")
+    plt.title(f"{metric_name.capitalize()} {LLM_MODEL} {RAG} on {RAG_VER}")
+    plt.legend()
+    plt.show()
+

@@ -6,7 +6,6 @@ from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import ResponseRelevancy, FactualCorrectness, SemanticSimilarity
 
-
 # Import
 LLM_MODEL = os.getenv("LLM_MODEL")
 
@@ -17,7 +16,7 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 # 3. rag_12_script.csv: RAG12
 
 FOLDER_PATH = "script"
-RAG_VER= "rag_2"
+RAG_VER= "DB_12"
 FILE = f"{FOLDER_PATH}/{RAG_VER}"
 
 
@@ -30,7 +29,7 @@ ground_truth_csv = open(f"{FILE}_ground_truth.csv", mode="r", encoding="utf-8")
 ground_truth_read = csv.reader(ground_truth_csv)
 
 # Answer CSV
-answer_csv = open(f"{FILE}_answer.csv", mode="r", encoding="utf-8")
+answer_csv = open(f"{FILE}_answer_{LLM_MODEL}_rag.csv", mode="r", encoding="utf-8")
 answer_read = csv.reader(answer_csv)
 
 # Dataset Creation
@@ -59,4 +58,4 @@ result.upload()
 # CSV Export
 df = result.to_pandas()
 folder = os.path.dirname(os.path.abspath(__file__))
-df.to_csv(f"{folder}/run_{LLM_MODEL}.csv")
+df.to_csv(f"{folder}/run_{RAG_VER}_rag_{LLM_MODEL}.csv")

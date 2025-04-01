@@ -19,20 +19,11 @@ import os
 load_dotenv()
 
 
-# TO BE ADJUSTED FOLDER PATH
-# List of Available Folders
-# 1. WGS-PDF1: RAG1
-# 2. WGS-PDF2: RAG2
-# 3. WGS-PDF12: RAG12
-# 4. WGS-PDF3: RAG3
-PDF_PATH = "WGS-PDF2" 
-
-
 class RAG:
-    def __init__(self, LLM_MODEL):
+    def __init__(self, DB, LLM_MODEL):
         self.docs = None
         self.llm = LLM_MODEL
-        self.vectorstore_dir = f"vectorstore_{PDF_PATH}_{LLM_MODEL}.db"
+        self.vectorstore_dir = f"vectorstore_{DB}_{LLM_MODEL}.db"
         
         # LLM Selection
         if "gpt" in LLM_MODEL:
@@ -45,11 +36,11 @@ class RAG:
         # Vectorstore verification
         if os.path.exists(self.vectorstore_dir):
             print("Loading existing vectorstore...")
-            self.vectorstore = Chroma(persist_directory=self.vectorstore_dir, embedding_function=OpenAIEmbeddings())
+            self.vectorstore = Chroma(persist_directory=self.vectorstore_dir, embedding_function=self.embeddings)
         else:
             print("Creating new vectorstore...")
             parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            pdf_folder_path = os.path.join(parent_dir, PDF_PATH)
+            pdf_folder_path = os.path.join(parent_dir, DB)
             pdf_files = glob.glob(f"{pdf_folder_path}/*.pdf")
             self.docs = pdf_files
 
@@ -71,65 +62,77 @@ class RAG:
                 embedding=self.embeddings,
                 persist_directory=self.vectorstore_dir
             )
-
-
-    def get_most_relevant_content(self, query):
-        
-        llm = self.llm
-        retriever = self.vectorstore.as_retriever(search_kwargs={'k': 2})
-        
-        
-        ranker = LLMListwiseRerank.from_llm(llm, top_n=5)
-        retriever = ContextualCompressionRetriever(
-            base_compressor=ranker,
-            base_retriever=retriever
-        )
-        
-        compressed_docs = retriever.invoke(query)
-        compressed_content = " ".join([doc.page_content for doc in compressed_docs])
-
-        return compressed_content
         
     
     def generate_answer(self, query):
+        """
+        Generate answer based on given RAG version
+        """
         # Initialize
         llm = self.llm
         retriever = self.vectorstore.as_retriever(search_kwargs={'k': 5})
 
-        # Filter and Compress
-        filter = LLMListwiseRerank.from_llm(llm, top_n=10)
-        retriever = ContextualCompressionRetriever(
-            base_compressor=filter,
-            base_retriever=retriever
-        )
+        try:
+            # Filter and Compress
+            filter = LLMListwiseRerank.from_llm(llm, top_n=10)
+            retriever = ContextualCompressionRetriever(
+                base_compressor=filter,
+                base_retriever=retriever
+            )
+            if not retriever:
+                raise ValueError("No retriever provided. Please check")
+            compressed_docs = retriever.invoke(query)
+            compressed_context = " ".join([doc.page_content for doc in compressed_docs])
+            prompt_text="""
+            you are an expert researcher particularly in the field of water gas-shift reactions
+            here are some references that you can use to aid in the answering of the questions
+            {context}
+            take time in answering, do not give not factual answers
+            please try to search throughout the database of documents that you have as references and guides
+            the answer you might need could possibly come up from multiple files
+            so it is possible for you to piece answer together from different files
+            you are only allowed to give answers from this particular database
+            do not cite sources that do not exist from within these collection of database
+            you are also allowed to make your own reasoning if you have the need to do so
+            the pdf files have been named in a way that it contain the names of the author and the year of publication
+            be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
+            Remove all characters in this list["*]  
+            """
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", prompt_text),
+                ("human", "{input}")
+            ])
 
-        compressed_docs = retriever.invoke(query)
-        compressed_context = " ".join([doc.page_content for doc in compressed_docs])
+            # chain creation
+            qa_chain = create_stuff_documents_chain(llm, prompt)
+            rag_chain = create_retrieval_chain(retriever, qa_chain)
+            answer = rag_chain.invoke({"input": query, "context": compressed_context})['answer']
 
 
-        prompt_text="""
-        you are an expert researcher particularly in the field of water gas-shift reactions
-        here are some references that you can use to aid in the answering of the questions
-        {context}
-        take time in answering, do not give not factual answers
-        please try to search throughout the database of documents that you have as references and guides
-        the answer you might need could possibly come up from multiple files
-        so it is possible for you to piece answer together from different files
-        you are only allowed to give answers from this particular database
-        do not cite sources that do not exist from within these collection of database
-        you are also allowed to make your own reasoning if you have the need to do so
-        the pdf files have been named in a way that it contain the names of the author and the year of publication
-        be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
-        Remove all characters in this list["*]  
-        """
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", prompt_text),
-            ("human", "{input}")
-        ])
+        except IndexError:
+            prompt_text="""
+            you are an expert researcher particularly in the field of water gas-shift reactions
+            here are some references that you can use to aid in the answering of the questions
+            {context}
+            take time in answering, do not give not factual answers
+            please try to search throughout the database of documents that you have as references and guides
+            the answer you might need could possibly come up from multiple files
+            so it is possible for you to piece answer together from different files
+            you are only allowed to give answers from this particular database
+            do not cite sources that do not exist from within these collection of database
+            you are also allowed to make your own reasoning if you have the need to do so
+            the pdf files have been named in a way that it contain the names of the author and the year of publication
+            be scientifically accurate in your answer and provide relevant in-depth explanations where you deem necessary
+            Remove all characters in this list["*]  
+            """
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", prompt_text),
+                ("human", "{input}")
+            ])
 
-        # chain creation
-        qa_chain = create_stuff_documents_chain(llm, prompt)
-        rag_chain = create_retrieval_chain(retriever, qa_chain)
-        answer = rag_chain.invoke({"input": query, "context": compressed_context})['answer']
-       
+            # chain creation
+            qa_chain = create_stuff_documents_chain(llm, prompt)
+            rag_chain = create_retrieval_chain(retriever, qa_chain)
+            answer = rag_chain.invoke({"input": query})['answer']
+        
         return answer

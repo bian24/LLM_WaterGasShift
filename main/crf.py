@@ -154,71 +154,68 @@ def prepare_data(data):
     
     return X, y
 
-
-# Train CRF Model
-X_train, y_train = prepare_data(dataset)
-crf = sklearn_crfsuite.CRF(
-    algorithm='lbfgs',
-    c1=0.1,  # L1 regularization
-    c2=0.1,  # L2 regularization
-    max_iterations=100,
-    all_possible_transitions=True
-)
-crf.fit(X_train, y_train)
-
-
-def process_input(input_prompt):
-    """
-    Process Input and give a 98 x 1 resulting vector output of each feature mentioned
-    
-    Args:
-        - input_prompt(str) prompt that depict the experiment
-     
-    Returns:
-        - vector output (list) 98 x 1 list that characterizes the experiment of features"""
-    # Preprocess
-    tokens = input_prompt.split()
-    tokens = [' '.join(token.split('-')) for token in tokens] 
-    sentence = [(token, 'O') for token in tokens]  
-    X_input = [extract_features(sentence, i) for i in range(len(sentence))]
-    
-    # Prediction
-    y_pred = crf.predict([X_input])[0]  #
-    
-    # Initialize a 98x1 vector (all zeros initially)
-    vector = [0] * 98
-    quantity = None
-    for token, label in zip(tokens, y_pred):
-        if label == 'B-QUANTITY' and token.isdigit():
-            quantity = float(token)  
+class CRF():
+        def process_input(self,input_prompt):
+            """
+            Process Input and give a 98 x 1 resulting vector output of each feature mentioned
             
-        elif label == 'B-METAL' and token.lower() in entity_to_column:
-            # Map quantity to the corresponding metal column
-            column = entity_to_column[token.lower()]
-            if quantity:
-                vector[column] = quantity 
-            else:
-                vector[column] = 1  
-        
-        elif label == 'B-PROMOTER' and token.lower() in entity_to_column:
-            # Map quantity to the corresponding promoter column
-            column = entity_to_column[token.lower()]
-            if quantity:
-                vector[column] = quantity  
-            else:
-                vector[column] = 1  
-        
-        elif label == 'B-SUPPORT' and token.lower() in entity_to_column:
-            # Map quantity to the corresponding support column
-            column = entity_to_column[token.lower()]
-            if quantity:
-                vector[column] = quantity  
-            else:
-                vector[column] = 1 
-        
-        elif label == 'B-METHOD' and token.lower() in entity_to_column:
-            # Set process column to 1 if a process is mentioned
-            column = entity_to_column[token.lower()]
-            vector[column] = 1
-    
-    return vector
+            Args:
+                - input_prompt(str) prompt that depict the experiment
+            
+            Returns:
+                - vector output (list) 98 x 1 list that characterizes the experiment of features"""
+            X_train, y_train = prepare_data(dataset)
+            crf = sklearn_crfsuite.CRF(
+                algorithm='lbfgs',
+                c1=0.1,  # L1 regularization
+                c2=0.1,  # L2 regularization
+                max_iterations=100,
+                all_possible_transitions=True
+            )
+            self.crf = crf.fit(X_train, y_train)
+            # Preprocess
+            tokens = input_prompt.split()
+            tokens = [' '.join(token.split('-')) for token in tokens] 
+            sentence = [(token, 'O') for token in tokens]  
+            X_input = [extract_features(sentence, i) for i in range(len(sentence))]
+            
+            # Prediction
+            y_pred = self.crf.predict([X_input])[0]  #
+            
+            # Initialize a 98x1 vector (all zeros initially)
+            vector = [0] * 98
+            quantity = None
+            for token, label in zip(tokens, y_pred):
+                if label == 'B-QUANTITY' and token.isdigit():
+                    quantity = float(token)  
+                    
+                elif label == 'B-METAL' and token.lower() in entity_to_column:
+                    # Map quantity to the corresponding metal column
+                    column = entity_to_column[token.lower()]
+                    if quantity:
+                        vector[column] = quantity 
+                    else:
+                        vector[column] = 1  
+                
+                elif label == 'B-PROMOTER' and token.lower() in entity_to_column:
+                    # Map quantity to the corresponding promoter column
+                    column = entity_to_column[token.lower()]
+                    if quantity:
+                        vector[column] = quantity  
+                    else:
+                        vector[column] = 1  
+                
+                elif label == 'B-SUPPORT' and token.lower() in entity_to_column:
+                    # Map quantity to the corresponding support column
+                    column = entity_to_column[token.lower()]
+                    if quantity:
+                        vector[column] = quantity  
+                    else:
+                        vector[column] = 1 
+                
+                elif label == 'B-METHOD' and token.lower() in entity_to_column:
+                    # Set process column to 1 if a process is mentioned
+                    column = entity_to_column[token.lower()]
+                    vector[column] = 1
+            
+            return vector

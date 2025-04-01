@@ -15,7 +15,7 @@ from main.base_llm import BaseLLM
 # 2. DB_2: Database of PDF-2
 # 3. DB_12: Database of PDF-12
 FOLDER_PATH = "script"
-DB = "DB_2"
+DB = "DB_12"
 FILE = f"{FOLDER_PATH}/{DB}"
 
 # For Base LLM Testing
@@ -38,7 +38,7 @@ ans_writer = csv.writer(ans_csv)
 
 if "rag" in LLM_MODEL:
     model = LLM_MODEL.replace("_rag", "")
-    rag = RAG(model)
+    rag = RAG(DB, model)
     number = 1
     for query in question_read:
         answer = re.sub(r'[\*"]', "", rag.generate_answer(str(query)))
